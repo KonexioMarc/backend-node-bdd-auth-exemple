@@ -3,7 +3,17 @@ const app = express();
 const port = 3002
 const session = require('express-session')
 const passport = require('./config/passport')
+const cors = require('cors');
+const UserModel = require('./models/users');
+const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
 
+mongoose.connect('mongodb://localhost:27017/login')
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  }))
 app.use(express.json())
 
 
@@ -20,7 +30,36 @@ app.post('/login', passport.authenticate('local'), function(req, res, next){
     if (!req.user) {
         res.status(401).send('The username password is not correct')
     }
-    res.send('Hello ' + req.user.username)
+    res.json({message: 'ok'})
+})
+
+app.post('/signup', async function(req, res, next) {
+    // try {
+    //     const body = req.body;
+    //     console.log('body', body)
+    //     const hash = await bcrypt.hash(body.password, 10)
+    //     body.password = hash
+    //     UserModel.create(body)
+    //         .then(user => res.json(user))
+
+    // } catch(err) {
+    //     console.error(err)
+    // }
+
+    const body = req.body;
+    console.log('body', body)
+    bcrypt.hash(body.password, 10)
+        .then(hash => {            
+            body.password = hash
+            UserModel.create(body)
+                .then(user => res.json(user))
+        })
+})
+
+app.get('/users', passport.authorize('local'), (req, res, next) => {
+    UserModel.find()
+        .exec()
+        .then(users => res.json(users))
 })
 
 
