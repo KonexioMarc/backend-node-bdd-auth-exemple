@@ -56,7 +56,18 @@ app.post('/signup', async function(req, res, next) {
         })
 })
 
-app.get('/users', passport.authorize('local'), (req, res, next) => {
+const checkAuth = (req, res, next) => {
+    console.log(req.isAuthenticated())
+    console.log(req.user)
+    if (req.isAuthenticated()) {
+        next()
+    } else {
+        res.status(403).send('You need to be authenticated')
+    }
+}
+
+app.get('/users', checkAuth, (req, res, next) => {
+
     UserModel.find()
         .exec()
         .then(users => res.json(users))
